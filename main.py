@@ -26,10 +26,8 @@ limpiador.MoveJ(nueva_pos)
 
 sleep(2)
 
-print("\n¡Movimiento completado!")
+print("\n¡Movimiento completado!\n")
 
-θ = limpiador.Joints().tolist()
+sleep(2)
 
-print(θ)
-
-ur30.CinematicaInversa(θ, -0.310192, -1.402855, 0.498155, [-22.583, -134.362, 85.773])
+siguiente_pos = ur30.CinematicaInversa(-0.310192, -1.402855, 0.498155, [-22.583, -134.362, 85.773])

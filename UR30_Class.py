@@ -1,4 +1,5 @@
 from numpy import cos, sin , array, eye, pi, deg2rad, acos, matrix, rad2deg, dot, arange, zeros, isnan, concatenate, cross, finfo, trace
+from numpy import set_printoptions
 from time import sleep
 from numpy.linalg import solve, det, norm 
 
@@ -153,6 +154,10 @@ class UR30:
 
         return T, T_stack 
 
+    """
+    Función que transforma de vector eje ángulo a matriz de rotación
+    Está reservada para la cinemática directa
+    """
     def urVectorToRotation(self, rv):
         theta = norm(rv)
         if theta < finfo(float).eps:
@@ -164,6 +169,9 @@ class UR30:
         R = eye(3) + sin(theta) * Ux + (1 - cos(theta)) * (Ux @ Ux)
         return R
     
+    """
+    Función reservada para la Cinemática Inversa
+    """
     def funcionCD_UR3_IK_Engine(self, var, xd, yd, zd, rvd_deg):
 
         q1 = var[0]
@@ -214,6 +222,10 @@ class UR30:
         
         return error_f, ep, ew_vec, J, posicionTool, rotacionTool
 
+    """
+    Función que pasa de matriz de rotación a vector eje-ángulo. 
+    Reservada para cinemática inversa
+    """
     def rotationToVector(self, R):
         theta = acos((trace(R)-1)/2)
 
@@ -250,14 +262,13 @@ class UR30:
     """
     Función que calcula la cinemática inversa del robot, necesaria para satisfacer valores deseados
     """
-    def CinematicaInversa(self, θs, xd, yd, zd, ea_vec_d):
-        q_start = deg2rad(θs)
+    def CinematicaInversa(self, xd, yd, zd, ea_vec_d):
 
         # PARÁMETROS DE OPTIMIZACIÓN
         max_iteraciones = 1000
         tol = 1e-8
         mu = 1e-3
-        q = array(q_start)
+        q = array(deg2rad(self.θ))
 
         print("----- INICIANDO OPTIMIZACIÓN IK ------")
         sleep(2)
@@ -293,15 +304,19 @@ class UR30:
 
         q_deg = rad2deg(q)
 
+        set_printoptions(suppress=True)
+
         # --- IMPRESIÓN DE RESULTADOS ---
         print('\n--- RESULTADOS ---\n')
         print('Iteraciones: ', i)
         print('Error final (norma): ', error_actual)
-        print('\nPosición Alcanzada: ', Posf)
+        print('\nPosición Alcanzada: ', [float(x) for x in Posf])
         print('Posición Deseada: ', xd, yd, zd)
         print('\nVector Rot. Alcanzado: ', rv_final)
         print('Vector Rot. Deseado: ', ea_vec_d)
         print('Config. Ang. Solucion: ', q_deg)
+
+        return q_deg
 
 
     """
@@ -406,5 +421,15 @@ class UR30:
         else:
             print("Forma parte del rango")
 
+        self.actualizarDatos([θ1_deg, θ2_deg, θ3_deg, θ4_deg, θ5_deg, θ6_deg])
+
         return [θ1_deg, θ2_deg, θ3_deg, θ4_deg, θ5_deg, θ6_deg]
-        
+
+    """
+    Función que actualiza las posiciones, orientaciones y valores de theta del robot.
+    """
+    def actualizarDatos(self, θ):
+        self.θ = θ
+        self.T = self.CinematicaDirecta()
+        self.Pos = self.Posicion()
+        self.Ori = self.Orientacion()  
