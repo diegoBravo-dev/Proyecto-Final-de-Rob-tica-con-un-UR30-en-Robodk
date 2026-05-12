@@ -1,4 +1,6 @@
-from numpy import cos, sin , array, eye, pi, deg2rad, acos, matrix, rad2deg, dot, arange, zeros, sqrt, transpose
+from numpy import cos, sin , array, eye, pi, deg2rad, acos, matrix, rad2deg, dot, arange, zeros, isnan, concatenate, cross, finfo, trace
+from time import sleep
+from numpy.linalg import solve, det, norm 
 
 
 class UR30:
@@ -130,10 +132,105 @@ class UR30:
         return t, q
     
     """
+    Función reservada para cinemática directa
+    """
+    def DH_Solve_t_stack(self, θ):
+        T_stack = []
+        T = eye(4)
+
+        #Aplica la matriz de transformación obtenida con el método de DH
+        for i in range(6):
+            Aj = array([[cos(θ[i]), -sin(θ[i])*cos(self.__α[i]), sin(θ[i])*sin(self.__α[i]), self.__a[i]*cos(θ[i])],
+                        [sin(θ[i]), cos(θ[i])*cos(self.__α[i]), -cos(θ[i])*sin(self.__α[i]), self.__a[i]*sin(θ[i])],
+                        [0,              sin(self.__α[i]),                 cos(self.__α[i]),                self.__d[i]],
+                        [0,              0,                                0,                               1]])
+            T @= Aj
+            T_stack.append(T.copy())
+         
+         #Se aplica la transformación de matrices
+        T @= self.__tool
+        T_stack.append(T.copy())
+
+        return T, T_stack 
+
+    def urVectorToRotation(self, rv):
+        theta = norm(rv)
+        if theta < finfo(float).eps:
+            return eye(3)
+        u = rv / theta
+        Ux = array([[0, -u[2], u[1]],
+            [u[2], 0, -u[0]],
+            [-u[1], u[0], 0]])
+        R = eye(3) + sin(theta) * Ux + (1 - cos(theta)) * (Ux @ Ux)
+        return R
+    
+    def funcionCD_UR3_IK_Engine(self, var, xd, yd, zd, rvd_deg):
+
+        q1 = var[0]
+        q2 = var[1]
+        q3 = var[2]
+        q4 = var[3]
+        q5 = var[4]
+        q6 = var[5]
+
+        qs = [q1, q2, q3, q4, q5, q6]
+
+        #Hallar matriz DH y Multiplicar la cinemática directa del EF con la herramienta
+        T0_tool, T_stack = self.DH_Solve_t_stack(qs)
+
+        posicionTool = [T0_tool[0][3], T0_tool[1][3], T0_tool[2][3]]
+        rotacionTool = T0_tool[:3, :3]
+
+        #Jacobiano Geométrico
+        J = zeros((6,6))
+        
+        o_n = T0_tool[:3, 3]
+        
+        z_p = array([0, 0, 1])
+        
+        o_p = array([0, 0, 0])
+        
+        J[:, 0] = concatenate([cross(z_p, o_n - o_p), z_p])
+        
+        for i in range(1, 6):
+            z_i = T_stack[i-1][:3, 2]
+            o_i = T_stack[i-1][:3, 3]
+            J[:, i] = concatenate([cross(z_i, o_n - o_i), z_i])
+        
+        #Error de posición
+        ep = array([xd - posicionTool[0],
+                    yd - posicionTool[1],
+                    zd - posicionTool[2]])
+        
+        #Error de Orientación (Vectorial para compatibilidad con J)
+        Rd = self.urVectorToRotation(deg2rad(rvd_deg))
+        ew_vec = 0.5 * (cross(rotacionTool[:,0], Rd[:,0]) + cross(rotacionTool[:,1], Rd[:,1]) + cross(rotacionTool[:,2], Rd[:,2]))
+
+        if det(J) == 0:
+            error_f = norm(ep) + norm(ew_vec) + 1000
+            print("--- Singularidad ---\n")
+        else:
+            error_f = norm(ep) + norm(ew_vec)
+        
+        return error_f, ep, ew_vec, J, posicionTool, rotacionTool
+
+    def rotationToVector(self, R):
+        theta = acos((trace(R)-1)/2)
+
+        a = 1/(2*sin(theta))
+        b = array([R[2,1] - R[1,2], 
+                R[0,2] - R[2,0], 
+                R[1,0] - R[0,1]])
+        u = a * b
+
+        r_ur = u * theta
+
+        return r_ur  
+
+    """
     Función que obtiene la cinemática directa del UR30 mediante el método de DH y transformación de matrices
 
     """
-
     def CinematicaDirecta(self):
          T = eye(4)
 
@@ -149,6 +246,63 @@ class UR30:
          T @= self.__tool 
 
          return T 
+    
+    """
+    Función que calcula la cinemática inversa del robot, necesaria para satisfacer valores deseados
+    """
+    def CinematicaInversa(self, θs, xd, yd, zd, ea_vec_d):
+        q_start = deg2rad(θs)
+
+        # PARÁMETROS DE OPTIMIZACIÓN
+        max_iteraciones = 1000
+        tol = 1e-8
+        mu = 1e-3
+        q = array(q_start)
+
+        print("----- INICIANDO OPTIMIZACIÓN IK ------")
+        sleep(2)
+
+        for i in range(max_iteraciones):
+            # Llamada a la función de cinemática y error
+            error_actual, ep, ew_vec, J, Posf, Rf = self.funcionCD_UR3_IK_Engine(q, xd, yd, zd, ea_vec_d)
+
+            if error_actual < tol:
+                break
+
+            # Vector de error completo
+            e_vector = concatenate([ep, ew_vec])
+
+            #Cálculo de Levenberg-Marquadt
+            A = J.T @ J + mu * eye(6)
+            g = J.T @ e_vector
+            dq = solve(A, g)
+
+            q_new = q + dq
+
+            #Evaluar mejora
+            error_nuevo, _, _, _, _, _ = self.funcionCD_UR3_IK_Engine(q_new, xd, yd, zd, ea_vec_d)
+
+            if error_nuevo < error_actual and not any(isnan(q_new)):
+                q = q_new
+                mu /= 10
+            else:
+                mu *= 10
+        
+        rv_final_rad = self.rotationToVector(Rf)
+        rv_final = rad2deg(rv_final_rad)
+
+        q_deg = rad2deg(q)
+
+        # --- IMPRESIÓN DE RESULTADOS ---
+        print('\n--- RESULTADOS ---\n')
+        print('Iteraciones: ', i)
+        print('Error final (norma): ', error_actual)
+        print('\nPosición Alcanzada: ', Posf)
+        print('Posición Deseada: ', xd, yd, zd)
+        print('\nVector Rot. Alcanzado: ', rv_final)
+        print('Vector Rot. Deseado: ', ea_vec_d)
+        print('Config. Ang. Solucion: ', q_deg)
+
 
     """
     Función que obtiene la posición en x, y y z del Efector Final del robot
@@ -253,3 +407,4 @@ class UR30:
             print("Forma parte del rango")
 
         return [θ1_deg, θ2_deg, θ3_deg, θ4_deg, θ5_deg, θ6_deg]
+        
