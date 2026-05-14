@@ -1,5 +1,18 @@
 from sympy import sin, eye, Matrix, cos, symbols, simplify, pi, diff
 
+def DH_simbolica_ejemplo(θs, a, d, αs):
+    T06 = eye(4)
+    
+    for i in range(6):
+        T = Matrix([[cos(θs[i]), -sin(θs[i])*cos(αs[i]), sin(θs[i])*sin(αs[i]), a[i]*cos(θs[i])],
+                    [sin(θs[i]), cos(θs[i])*cos(αs[i]), -cos(θs[i])*sin(αs[i]), a[i]*sin(θs[i])],
+                    [0,          sin(αs[i]),             cos(αs[i]),            d[i]],
+                    [0,          0,                         0,                        1]])
+        
+        T06 = T06.multiply(T)
+    
+    return T06
+
 def DH_simbolica(θs, a, d, αs):
     T06 = eye(4)
     
@@ -29,11 +42,17 @@ d = [0.2363, 0, 0, 0.2010, 0.1593, 0.1543]
 αs = [π/2, 0, 0, π/2, -π/2, 0]
 
 T0_tool = DH_simbolica(θs, a, d, αs)
+T06 = DH_simbolica_ejemplo(θs, a, d, αs)
 
 X = T0_tool.col(3)
+X2 = T06.col(3)
 
 px = simplify(X[0])
 py = simplify(X[1])
 pz = simplify(X[2])
 
-#print(prz)
+px2 = simplify(X2[0])
+py2 = simplify(X2[1])
+pz2 = simplify(X2[2])
+
+print(diff(pz2, θ_6))
