@@ -1,6 +1,12 @@
 from numpy import array, zeros, arange
 from numpy.linalg import solve
 
+"""
+Función que traza una trayectoria para el robot usando polinomio Quíntico.
+Basado en el de Matlab, este está modificado para poder tener más de un parámetro, el cual es necesario debido a que
+el movimiento del robot depende de la posición angular de sus articulaciones
+"""
+
 def trazarTrayectoria(θ0, θf):
     ω0 = zeros(6)
     α0 = zeros(6)

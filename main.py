@@ -261,6 +261,10 @@ mat = Mat(rows)
 
 chasis.setPose(mat)
 
+print("--- EJECUTANDO CICLO 2 DE PINTADO ---\n")
+
+sleep(2)
+
 ciclo2(ur30)
 
 rows = [
@@ -274,6 +278,10 @@ mat = Mat(rows)
 
 chasis.setPose(mat)
 
+print("--- EJECUTANDO CICLO 3 DE PINTADO ---\n")
+
+sleep(2)
+
 ciclo3(ur30)
 
 rows = [
@@ -286,5 +294,9 @@ rows = [
 mat = Mat(rows)
 
 chasis.setPose(mat)
+
+print("--- EJECUTANDO CICLO 4 DE PINTADO ---\n")
+
+sleep(2)
 
 ciclo4(ur30)
