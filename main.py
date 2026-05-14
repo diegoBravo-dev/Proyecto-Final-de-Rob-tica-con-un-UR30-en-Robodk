@@ -2,7 +2,7 @@ from robodk.robolink import *
 from robodk.robomath import Mat
 from UR30_Class import UR30
 from trayectorias import trazarTrayectoria
-from numpy import deg2rad, array
+from numpy import deg2rad, array, arange
 from time import sleep
 
 def moverRobot(ur30, xd, yd, zd, ea_vec_d):
@@ -113,6 +113,61 @@ def ciclo2(ur30):
     # REACOMODO 2
     moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
 
+def ciclo3(ur30):
+    # PINTADO 21
+    moverRobot(ur30, 0.315338, -0.594302, 0.443479, [81.674, -81.918, 69.714])
+
+    # PINTADO 22
+    moverRobot(ur30, 0.535846, -0.587976, 0.510684, [34.652, -130.103, 102.779])
+
+    # PINTADO 23
+    moverRobot(ur30, 0.653121, -0.584859, 0.939328, [27.408, -150.016, 57.01])
+
+    # REACOMODO 2
+    moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
+
+    # PINTADO 24
+    moverRobot(ur30, -0.330581, -0.677182, 0.756908, [-15.534, -142.868, 77.739])
+
+    # PINTADO 25
+    moverRobot(ur30, -0.404924, -0.645261, 0.543357, [-15.534, -142.868, 77.739])
+
+    # PINTADO 26
+    moverRobot(ur30, -0.761694, -0.752705, 0.417788, [11.636, 140.874, -76.96])
+
+    # PINTADO 27
+    moverRobot(ur30, -0.822491, -0.81472, 0.236519, [29.868, -135.511, 104.205])
+
+    # PINTADO 28
+    moverRobot(ur30, -0.747724, -0.798694, 0.213, [29.868, -135.511, 104.205])
+
+    # PINTADO 29
+    moverRobot(ur30, -0.7755, -0.875217, 0.072556, [30.894, -127.084, 116.693])
+
+    # PINTADO 30
+    moverRobot(ur30, -0.499842, -0.742036, 0.053185, [30.894, -127.084, 116.693])
+
+    # PINTADO 31
+    moverRobot(ur30, -0.51408, -0.74861, 0.139502, [29.868, -135.511, 104.205])
+
+    # PINTADO 32
+    moverRobot(ur30, -0.240305, -0.633946, 0.050503, [27.963, -146.021, 84.507])
+
+    # PINTADO 33
+    moverRobot(ur30, -0.101552, -0.644516, 0.076211, [29.281, -139.301, 97.755])
+
+    # PINTADO 30
+    moverRobot(ur30, -0.499842, -0.742036, 0.053185, [30.894, -127.084, 116.693])
+
+    # PINTADO 34
+    moverRobot(ur30, -0.588837, -0.777236, 0.222495, [30.894, -127.084, 116.693])
+
+    # PINTADO 35
+    moverRobot(ur30, -0.738369, -0.80929, 0.269533, [30.894, -127.084, 116.693])
+
+    # REACOMODO 2
+    moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
+
 RDK = Robolink()
 
 pintor = RDK.Item('UR30')
@@ -182,6 +237,19 @@ rows = [
     [-1.0, 0.0, 0.0, -1100.0],
     [0.0, 0.0, 1.0, 700.0],
     [0.0, 0.0, 0.0, 1.0]
+]
+
+mat = Mat(rows)
+
+chasis.setPose(mat)
+
+ciclo3(ur30)
+
+rows = [
+    [ 0.0, 1.0, 0.0, 500.0],
+    [ 1.0, 0.0, 0.0, -1100.0],
+    [ 0.0, 0.0, 1.0, 0.0],
+    [ 0.0, 0.0, 0.0, 1.0]
 ]
 
 mat = Mat(rows)
