@@ -1,15 +1,140 @@
-from robodk.robolink import Robolink
+from robodk.robolink import *
+from robodk.robomath import Mat
 from UR30_Class import UR30
 from trayectorias import trazarTrayectoria
 from numpy import deg2rad, array
 from time import sleep
 
+def moverRobot(ur30, xd, yd, zd, ea_vec_d):
+    
+    siguiente_pos = ur30.CinematicaInversa(xd, yd, zd, ea_vec_d)
+
+    t, q, _, _ = trazarTrayectoria(ur30.θ, siguiente_pos)
+
+    q1 = q[0]
+    q2 = q[1]
+    q3 = q[2]
+    q4 = q[3]
+    q5 = q[4]
+    q6 = q[5]
+
+    for i in range(len(t)):
+        θ1 = q1[i]
+        θ2 = q2[i]
+        θ3 = q3[i]
+        θ4 = q4[i]
+        θ5 = q5[i]
+        θ6 = q6[i]
+        movimiento = [θ1, θ2, θ3, θ4, θ5, θ6]
+        pintor.MoveJ(movimiento)
+
+    ur30.actualizarDatos(movimiento)
+
+def ciclo1(ur30):
+    # PINTADO 1
+    moverRobot(ur30, 0.983765, -0.775725, -0.177751, [2.04, -130.783, 18.771])
+
+    # PINTADO 2
+    moverRobot(ur30, 0.8815, -0.752587, -0.017867, [7.219, -157.969, 19.888])
+
+    # PINTADO 3
+    moverRobot(ur30, 0.583188, -0.77159, 0.235376, [2.069, -158.588, -7.824])
+
+    # PINTADO 4
+    moverRobot(ur30, 0.103227, -0.79372, 0.420775, [2.069, -158.588, -7.824])
+
+    # PINTADO 5
+    moverRobot(ur30, -0.2183, -0.808545, 0.544975, [2.069, -158.588, -7.824])
+
+    # REACOMODO 1
+    moverRobot(ur30, -0.10162, -0.790585, 0.375586, [-3.454, -142.225, 67.186])
+
+    # PINTADO 6
+    moverRobot(ur30, -0.674523, -0.851675, 0.567096, [9.117, -156.612, 30.231])
+
+    # PINTADO 4
+    moverRobot(ur30, -0.2183, -0.808545, 0.544975, [2.069, -158.588, -7.824])
+
+    # PINTADO 6
+    moverRobot(ur30, -0.674523, -0.851675, 0.567096, [9.117, -156.612, 30.231])
+
+    # PINTADO 7
+    moverRobot(ur30, -0.716224, -0.670846, 0.366238, [21.631, -156.590, 73.313])
+
+    # PINTADO 6
+    moverRobot(ur30, -0.674523, -0.851675, 0.567096, [9.117, -156.612, 30.231])
+
+    # PINTADO 8
+    moverRobot(ur30, -0.230463, -0.837501, 0.496142, [9.117, -156.612, 30.231])
+
+    # REACOMODO 2
+    moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
+
+def ciclo2(ur30):
+    # PINTADO 9
+    moverRobot(ur30, 0.314938, -0.696655, 0.938676, [-6.369, -138.797, 57.914])
+
+    # PINTADO 10
+    moverRobot(ur30, 0.412844, -0.615818, 0.510272, [0.601, -126.421, 81.001])
+
+    # PINTADO 11
+    moverRobot(ur30, 0.992808, -0.84292, 0.363076, [-13.575, -129.645, 87.516])
+
+    # PINTADO 12
+    moverRobot(ur30, 0.524244, -0.739613, 0.229283, [-44.284, -132.524, 98.994])
+
+    # PINTADO 13
+    moverRobot(ur30, 0.779221, -0.842326, 0.088577, [-3.9, -108.924, 88.253])
+
+    # PINTADO 14
+    moverRobot(ur30, 0.259673, -0.711864, 0.090304, [-40.133, -141.201, 75.058])
+
+    # REACOMODO 2
+    moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
+
+    # PINTADO 15
+    moverRobot(ur30, -0.64738, -0.591189, 0.796154, [-12.212, -130.69, 95.134])
+
+    # PINTADO 16
+    moverRobot(ur30, -0.572491, -0.604381, 0.391407, [45.742, -105.646, 62.388])
+
+    # REACOMODO 2
+    moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
+
+    # PINTADO 17
+    moverRobot(ur30, 0.172576, -0.70438, 0.052343, [33.698, -146.812, 58.73])
+
+    # PINTADO 18
+    moverRobot(ur30, -0.103924, -0.711737, 0.223352, [33.698, -146.812, 58.73])
+
+    # PINTADO 19
+    moverRobot(ur30, -0.465534, -0.590842, 0.431859, [-5.074, -170.413, 27.077])
+
+    # REACOMODO 2
+    moverRobot(ur30, -0.13863, -0.600752, 0.76055, [-16.117, -123.878, 106.955])
+
 RDK = Robolink()
 
 pintor = RDK.Item('UR30')
 spray = RDK.Item('Generic Paint Sprayer')
+chasis = RDK.Item('Chasis')
 
 pintor.setTool(spray)
+
+home = [0, -90, -90, 0, 90, 0]
+
+rows = [
+    [ 0.0, -1.0,  0.0, -500.0],
+    [ 1.0,  0.0,  0.0, -1100.0],
+    [ 0.0,  0.0,  1.0,  0.0],
+    [ 0.0,  0.0,  0.0,  1.0]
+]
+
+mat = Mat(rows)
+
+chasis.setPose(mat)
+
+pintor.MoveJ(home)
 
 ur30 = UR30(pintor.Joints().tolist())
 
@@ -33,27 +158,32 @@ print("\n¡Movimiento completado!\n")
 
 sleep(2)
 
-siguiente_pos = ur30.CinematicaInversa(-0.310192, -1.402855, 0.498155, [-22.583, -134.362, 85.773])
+print("--- EJECUTANDO CICLO 1 DE PINTADO ---\n")
 
-print(ur30.θ)
+sleep(2)
 
-t, q, w, a = trazarTrayectoria(ur30.θ, siguiente_pos)
+ciclo1(ur30)
 
-q1 = q[0]
-q2 = q[1]
-q3 = q[2]
-q4 = q[3]
-q5 = q[4]
-q6 = q[5]
+rows = [
+    [ 0.0, -1.0,  0.0, -500.0],
+    [ 1.0,  0.0,  0.0, -1100.0],
+    [ 0.0,  0.0,  1.0,  700.0],
+    [ 0.0,  0.0,  0.0,  1.0]
+]
 
-spray.setParam("Activate", 1)
+mat = Mat(rows)
 
-for i in range(len(t)):
-    θ1 = q1[i]
-    θ2 = q2[i]
-    θ3 = q3[i]
-    θ4 = q4[i]
-    θ5 = q5[i]
-    θ6 = q6[i]
-    movimiento = [θ1, θ2, θ3, θ4, θ5, θ6]
-    pintor.MoveJ(movimiento)
+chasis.setPose(mat)
+
+ciclo2(ur30)
+
+rows = [
+    [0.0, 1.0, 0.0, 500.0],
+    [-1.0, 0.0, 0.0, -1100.0],
+    [0.0, 0.0, 1.0, 700.0],
+    [0.0, 0.0, 0.0, 1.0]
+]
+
+mat = Mat(rows)
+
+chasis.setPose(mat)

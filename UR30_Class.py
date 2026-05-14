@@ -79,9 +79,9 @@ class UR30:
         Jinv = J.getI()
 
         # Valores deseados de posición
-        xd = -0.026461
-        yd = -1.485464
-        zd = 0.441526
+        xd = -0.101620
+        yd = -0.790585
+        zd = 0.375586
 
         Xd = array([[xd], [yd], [zd]])
 
@@ -271,7 +271,6 @@ class UR30:
         q = array(deg2rad(self.θ))
 
         print("----- INICIANDO OPTIMIZACIÓN IK ------")
-        sleep(2)
 
         for i in range(max_iteraciones):
             # Llamada a la función de cinemática y error
