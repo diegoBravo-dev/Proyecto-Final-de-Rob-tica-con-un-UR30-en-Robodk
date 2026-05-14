@@ -1,4 +1,4 @@
-from sympy import acos, sin, eye, Matrix, cos, symbols, simplify, pi, diff
+from sympy import sin, eye, Matrix, cos, symbols, simplify, pi, diff
 
 def DH_simbolica(θs, a, d, αs):
     T06 = eye(4)
